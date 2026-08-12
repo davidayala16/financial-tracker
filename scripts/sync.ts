@@ -1,4 +1,8 @@
-import "dotenv/config";
+// GitHub Actions injects real env vars directly, so this is a no-op there.
+// Locally, load .env.local to match Next.js's own convention.
+import { config } from "dotenv";
+config({ path: ".env.local" });
+
 import { getServerSupabase } from "../src/lib/db";
 import { getPlaidClient } from "../src/lib/plaid";
 import { mirrorToSheets } from "../src/lib/sheets";
