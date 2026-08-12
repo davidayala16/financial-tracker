@@ -75,3 +75,16 @@ create table if not exists sync_runs (
   status text not null default 'running', -- running | success | error
   detail text
 );
+
+-- Supabase auto-exposes every table over a REST API guarded by the `anon`
+-- key. This app never uses that key -- the server only ever talks to
+-- Postgres via the `service_role` key, which bypasses RLS regardless of
+-- whether it's enabled. Turning RLS on here (with zero policies) closes
+-- off the anon/authenticated REST path entirely as a defense-in-depth
+-- measure, without affecting how this app works.
+alter table plaid_items enable row level security;
+alter table accounts enable row level security;
+alter table transactions enable row level security;
+alter table investment_holdings enable row level security;
+alter table manual_balances enable row level security;
+alter table sync_runs enable row level security;
