@@ -9,10 +9,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const { public_token, institution_name } = (await request.json()) as {
-    public_token: string;
-    institution_name: string;
-  };
+  const { public_token, institution_name, productType } =
+    (await request.json()) as {
+      public_token: string;
+      institution_name: string;
+      productType: "transactions" | "investments";
+    };
 
   const plaidClient = getPlaidClient();
   const exchange = await plaidClient.itemPublicTokenExchange({
@@ -24,6 +26,7 @@ export async function POST(request: Request) {
     item_id: exchange.data.item_id,
     access_token: exchange.data.access_token,
     institution_name,
+    product: productType,
   });
 
   if (error) {

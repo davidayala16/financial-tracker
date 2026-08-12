@@ -1,0 +1,16 @@
+{
+  "currency": "USD",
+  "categories": {
+    "FOOD_AND_DRINK": 600,
+    "GENERAL_MERCHANDISE": 300,
+    "TRANSPORTATION": 150,
+    "ENTERTAINMENT": 100,
+    "PERSONAL_CARE": 75,
+    "GENERAL_SERVICES": 100,
+    "HOME_IMPROVEMENT": 100,
+    "MEDICAL": 50,
+    "TRAVEL": 150,
+    "RENT_AND_UTILITIES": 0,
+    "BANK_FEES": 0
+  }
+}

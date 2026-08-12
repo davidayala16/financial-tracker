@@ -7,6 +7,7 @@ create table if not exists plaid_items (
   item_id text primary key,
   access_token text not null,
   institution_name text not null,
+  product text not null default 'transactions', -- 'transactions' | 'investments'
   accounts_cursor text, -- transactions/sync cursor, null = never synced
   created_at timestamptz not null default now()
 );

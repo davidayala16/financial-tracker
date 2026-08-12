@@ -2,6 +2,7 @@ export interface PlaidItemRow {
   item_id: string;
   access_token: string;
   institution_name: string;
+  product: "transactions" | "investments";
   accounts_cursor: string | null;
   created_at: string;
 }

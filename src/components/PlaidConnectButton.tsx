@@ -19,23 +19,31 @@ export function PlaidConnectButton({
     "idle",
   );
 
-  const fetchLinkToken = useCallback(async () => {
-    const res = await fetch("/api/plaid/create-link-token", {
+  useEffect(() => {
+    let ignore = false;
+
+    fetch("/api/plaid/create-link-token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productType }),
-    });
-    if (!res.ok) {
-      setStatus("error");
-      return;
-    }
-    const data = (await res.json()) as { link_token: string };
-    setLinkToken(data.link_token);
-  }, [productType]);
+    })
+      .then(async (res) => {
+        if (ignore) return;
+        if (!res.ok) {
+          setStatus("error");
+          return;
+        }
+        const data = (await res.json()) as { link_token: string };
+        if (!ignore) setLinkToken(data.link_token);
+      })
+      .catch(() => {
+        if (!ignore) setStatus("error");
+      });
 
-  useEffect(() => {
-    void fetchLinkToken();
-  }, [fetchLinkToken]);
+    return () => {
+      ignore = true;
+    };
+  }, [productType]);
 
   const onSuccess = useCallback<PlaidLinkOnSuccess>(
     async (public_token) => {
@@ -43,11 +51,15 @@ export function PlaidConnectButton({
       const res = await fetch("/api/plaid/exchange-public-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ public_token, institution_name: institutionName }),
+        body: JSON.stringify({
+          public_token,
+          institution_name: institutionName,
+          productType,
+        }),
       });
       setStatus(res.ok ? "connected" : "error");
     },
-    [institutionName],
+    [institutionName, productType],
   );
 
   const { open, ready } = usePlaidLink({
