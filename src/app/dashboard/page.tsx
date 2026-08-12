@@ -1,4 +1,5 @@
 import { getServerSupabase } from "@/lib/db";
+import { SyncStatus } from "@/components/SyncStatus";
 import type { BudgetConfig, TransactionRow } from "@/types";
 import budgetConfig from "../../../config/budget.json";
 
@@ -64,6 +65,9 @@ export default async function DashboardPage() {
   return (
     <main className="mx-auto max-w-2xl p-8">
       <h1 className="text-xl font-semibold">This month&apos;s spending</h1>
+      <div className="mt-1">
+        <SyncStatus />
+      </div>
       {error && (
         <p className="mt-2 text-sm text-red-600">
           Couldn&apos;t load transactions: {error.message}

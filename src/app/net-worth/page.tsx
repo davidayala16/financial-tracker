@@ -1,4 +1,5 @@
 import { getServerSupabase } from "@/lib/db";
+import { SyncStatus } from "@/components/SyncStatus";
 import type { AccountRow, ManualBalanceRow } from "@/types";
 
 function formatCurrency(amount: number, currency = "USD") {
@@ -45,6 +46,9 @@ export default async function NetWorthPage() {
   return (
     <main className="mx-auto max-w-xl p-8">
       <h1 className="text-xl font-semibold">Net worth</h1>
+      <div className="mt-1">
+        <SyncStatus />
+      </div>
       <p className="mt-2 text-3xl font-semibold">{formatCurrency(total)}</p>
 
       <section className="mt-8">

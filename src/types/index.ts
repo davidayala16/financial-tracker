@@ -57,6 +57,14 @@ export interface ManualBalanceRow {
   created_at: string;
 }
 
+export interface SyncRunRow {
+  id: number;
+  started_at: string;
+  finished_at: string | null;
+  status: "running" | "success" | "error";
+  detail: string | null;
+}
+
 export interface BudgetConfig {
   currency: string;
   categories: Record<string, number>;

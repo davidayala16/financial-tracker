@@ -133,6 +133,10 @@ async function syncInvestmentsItem(item: PlaidItemRow) {
   }
 }
 
+// One failing item (expired token, revoked consent, a single Plaid product
+// hiccup) shouldn't take down the whole day's sync for every other account.
+// Each item gets its own try/catch; failures are collected and reported,
+// but every other item still gets a chance to sync.
 async function main() {
   const { data: run, error: runError } = await supabase
     .from("sync_runs")
@@ -141,39 +145,48 @@ async function main() {
     .single();
   if (runError) throw new Error(`sync_runs insert: ${runError.message}`);
 
-  try {
-    const { data: items, error } = await supabase
-      .from("plaid_items")
-      .select("*");
-    if (error) throw new Error(`plaid_items select: ${error.message}`);
+  const failures: string[] = [];
 
-    for (const item of (items ?? []) as PlaidItemRow[]) {
-      console.log(`Syncing ${item.institution_name} (${item.product})…`);
+  const { data: items, error } = await supabase.from("plaid_items").select("*");
+  if (error) throw new Error(`plaid_items select: ${error.message}`);
+
+  for (const item of (items ?? []) as PlaidItemRow[]) {
+    console.log(`Syncing ${item.institution_name} (${item.product})…`);
+    try {
       if (item.product === "investments") {
         await syncInvestmentsItem(item);
       } else {
         await syncTransactionsItem(item);
       }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`Failed to sync ${item.institution_name}: ${message}`);
+      failures.push(`${item.institution_name}: ${message}`);
     }
+  }
 
+  try {
     await mirrorToSheets(supabase);
-
-    await supabase
-      .from("sync_runs")
-      .update({ status: "success", finished_at: new Date().toISOString() })
-      .eq("id", run.id);
-    console.log("Sync complete.");
   } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
-    await supabase
-      .from("sync_runs")
-      .update({
-        status: "error",
-        detail,
-        finished_at: new Date().toISOString(),
-      })
-      .eq("id", run.id);
-    throw err;
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`Failed to mirror to Sheets: ${message}`);
+    failures.push(`Sheets mirror: ${message}`);
+  }
+
+  await supabase
+    .from("sync_runs")
+    .update({
+      status: failures.length === 0 ? "success" : "error",
+      detail: failures.length > 0 ? failures.join("; ") : null,
+      finished_at: new Date().toISOString(),
+    })
+    .eq("id", run.id);
+
+  if (failures.length > 0) {
+    console.error(`Sync finished with ${failures.length} failure(s).`);
+    process.exitCode = 1;
+  } else {
+    console.log("Sync complete.");
   }
 }
 
