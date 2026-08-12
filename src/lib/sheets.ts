@@ -4,20 +4,24 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 type SheetValue = string | number | boolean | null;
 
 function getSheetsClient() {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
+  const clientId = process.env.AUTH_GOOGLE_ID;
+  const clientSecret = process.env.AUTH_GOOGLE_SECRET;
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
   const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!email || !privateKey || !sheetId) {
+  if (!clientId || !clientSecret || !refreshToken || !sheetId) {
     throw new Error(
-      "GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY / GOOGLE_SHEET_ID are not set",
+      "AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET / GOOGLE_REFRESH_TOKEN / GOOGLE_SHEET_ID are not set",
     );
   }
 
-  const auth = new google.auth.JWT({
-    email,
-    key: privateKey.replace(/\\n/g, "\n"),
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
+  // No GCP service account here on purpose: this project's org policy
+  // blocks service-account key creation. Instead this reuses the same
+  // OAuth client used for login, authenticated once as a long-lived
+  // refresh token tied to the sheet owner's own Google account (see
+  // README) -- no key file, no separate "share with service account"
+  // step needed since it's already the account's own sheet.
+  const auth = new google.auth.OAuth2(clientId, clientSecret);
+  auth.setCredentials({ refresh_token: refreshToken });
 
   return { sheets: google.sheets({ version: "v4", auth }), sheetId };
 }

@@ -54,14 +54,30 @@ recurring cost**.
    URL's equivalent as authorized redirect URIs. Copy the client ID/secret
    into `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`.
 4. **Enable the Google Sheets API** for the project.
-5. **Credentials > Create service account**, then create a JSON key for
-   it. From the JSON, copy `client_email` into
-   `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `private_key` into
-   `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`.
-6. Create a Google Sheet with four tabs named exactly `Accounts`,
-   `Transactions`, `Holdings`, `ManualBalances`. Share it with the service
-   account's email (Editor access). Copy the sheet ID (the long string in
-   its URL) into `GOOGLE_SHEET_ID`.
+5. Create a Google Sheet with four tabs named exactly `Accounts`,
+   `Transactions`, `Holdings`, `ManualBalances`. Copy the sheet ID (the
+   long string in its URL, between `/d/` and `/edit`) into
+   `GOOGLE_SHEET_ID`.
+6. **Get a refresh token for the sync job to write to that sheet.** A GCP
+   org policy on new projects (`iam.disableServiceAccountKeyCreation`)
+   blocks service-account JSON keys by default, and personal/no-org
+   projects usually can't override it. Instead, get a refresh token tied
+   to your own Google account via
+   [OAuth Playground](https://developers.google.com/oauthplayground):
+   1. On your OAuth client (step 3 above), add
+      `https://developers.google.com/oauthplayground` as an authorized
+      redirect URI.
+   2. On OAuth Playground, click the gear icon (top right) → check "Use
+      your own OAuth credentials" → paste in `AUTH_GOOGLE_ID` /
+      `AUTH_GOOGLE_SECRET`.
+   3. In the left panel, find **Google Sheets API v4** and select the
+      `https://www.googleapis.com/auth/spreadsheets` scope → **Authorize
+      APIs** → sign in with the same account that owns the Sheet from
+      step 5.
+   4. Click **Exchange authorization code for tokens** → copy the
+      **Refresh token** into `GOOGLE_REFRESH_TOKEN`.
+
+   No service-account sharing step needed — the sheet is already yours.
 
 ### 4. Local env
 
