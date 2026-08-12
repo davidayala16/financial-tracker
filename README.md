@@ -61,23 +61,26 @@ recurring cost**.
 6. **Get a refresh token for the sync job to write to that sheet.** A GCP
    org policy on new projects (`iam.disableServiceAccountKeyCreation`)
    blocks service-account JSON keys by default, and personal/no-org
-   projects usually can't override it. Instead, get a refresh token tied
-   to your own Google account via
-   [OAuth Playground](https://developers.google.com/oauthplayground):
-   1. On your OAuth client (step 3 above), add
-      `https://developers.google.com/oauthplayground` as an authorized
-      redirect URI.
-   2. On OAuth Playground, click the gear icon (top right) → check "Use
-      your own OAuth credentials" → paste in `AUTH_GOOGLE_ID` /
-      `AUTH_GOOGLE_SECRET`.
-   3. In the left panel, find **Google Sheets API v4** and select the
-      `https://www.googleapis.com/auth/spreadsheets` scope → **Authorize
-      APIs** → sign in with the same account that owns the Sheet from
-      step 5.
-   4. Click **Exchange authorization code for tokens** → copy the
-      **Refresh token** into `GOOGLE_REFRESH_TOKEN`.
+   projects usually can't override it. Google also now blocks the classic
+   "OAuth Playground trick" for unverified clients (`Error 400:
+   policy_enforced`), so this app has a built-in route that does the same
+   handshake against its own domain instead:
+   1. Add `<your app's base URL>/api/admin/google-sheets-token` as an
+      authorized redirect URI on your OAuth client (step 3 above) — e.g.
+      `http://localhost:3000/api/admin/google-sheets-token` for local dev,
+      or your Vercel URL's equivalent once deployed.
+   2. Sign into the dashboard, then visit that same URL in your browser.
+      It redirects to Google's consent screen (you may see an "unverified
+      app" warning — that's expected for a testing-mode app with only you
+      as a test user; click through it) and, after you approve, prints a
+      refresh token as plain text.
+   3. Copy that value into `GOOGLE_REFRESH_TOKEN`. No service-account
+      sharing step needed — the sheet is already yours.
 
-   No service-account sharing step needed — the sheet is already yours.
+   If you ever need a new one (e.g. after revoking access), visiting the
+   URL again works, as long as you revoke the app's prior access first at
+   [myaccount.google.com/permissions](https://myaccount.google.com/permissions)
+   — Google only issues a refresh token on first consent.
 
 ### 4. Local env
 
